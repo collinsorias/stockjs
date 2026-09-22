@@ -22,13 +22,14 @@ export default function SuperaccessPage() {
   const [activeTab, setActiveTab] = useState<PanelTab>("users");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [seededPassword, setSeededPassword] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
 
   // Once the first load lands, surface the requests queue when it needs a
   // decision. After that the admin's own tab choice wins.
   const defaultTabApplied = useRef(false);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (options?: { ensureSeedUser?: boolean }) => {
     try {
       setIsLoading(true);
       setError("");
@@ -49,11 +50,48 @@ export default function SuperaccessPage() {
       const usersData = await usersResponse.json();
       const transactionsData = await transactionsResponse.json();
 
-      const nextUsers: SuperaccessUser[] = usersData.users ?? [];
+      let nextUsers: SuperaccessUser[] = usersData.users ?? [];
       const nextTransactions: SuperaccessTransaction[] = transactionsData.transactions ?? [];
+      let generatedPassword: string | null = null;
+
+      // An empty table is seeded server side, so the panel never sits there
+      // with no accounts. The spawned user has no transactions: balance $0.
+      if (options?.ensureSeedUser && nextUsers.length === 0) {
+        const seedResponse = await fetch("/api/superaccess/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (seedResponse.ok) {
+          const seedData = await seedResponse.json();
+          const seededUser = seedData.user as SuperaccessUser | undefined;
+
+          if (seededUser) {
+            nextUsers = [seededUser];
+          }
+
+          generatedPassword =
+            typeof seedData.generatedPassword === "string" ? seedData.generatedPassword : null;
+        } else if (seedResponse.status === 409) {
+          // Someone else seeded between our read and the write; read again.
+          const retryResponse = await fetch("/api/superaccess/users", { cache: "no-store" });
+
+          if (retryResponse.ok) {
+            const retryData = await retryResponse.json();
+            nextUsers = retryData.users ?? [];
+          }
+        } else {
+          const seedData = await seedResponse.json().catch(() => null);
+          throw new Error(seedData?.error ?? `Failed to create user (${seedResponse.status})`);
+        }
+      }
 
       setUsers(nextUsers);
       setTransactions(nextTransactions);
+
+      if (generatedPassword) {
+        setSeededPassword(generatedPassword);
+      }
 
       if (!defaultTabApplied.current) {
         defaultTabApplied.current = true;
@@ -252,7 +290,7 @@ export default function SuperaccessPage() {
 
           <div className="flex flex-wrap items-center gap-3">
             <button
-              onClick={() => void loadData()}
+              onClick={() => void loadData({ ensureSeedUser: true })}
               disabled={isLoading}
               className="flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-200 hover:bg-cyan-500/20 disabled:opacity-60"
             >
@@ -286,6 +324,24 @@ export default function SuperaccessPage() {
               className="ml-4 rounded-full bg-rose-500/20 px-3 py-1 text-xs font-medium hover:bg-rose-500/30"
             >
               Retry
+            </button>
+          </div>
+        ) : null}
+
+        {seededPassword ? (
+          <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200 sm:flex-row sm:items-center sm:justify-between">
+            <span>
+              The user table was empty, so a Demo User account was created with a $0 balance.
+              Sign-in password:{" "}
+              <code className="rounded bg-emerald-500/20 px-1.5 py-0.5 font-mono text-emerald-100">
+                {seededPassword}
+              </code>
+            </span>
+            <button
+              onClick={() => setSeededPassword(null)}
+              className="self-start rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-medium hover:bg-emerald-500/30 sm:self-auto"
+            >
+              Dismiss
             </button>
           </div>
         ) : null}
