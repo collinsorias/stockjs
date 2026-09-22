@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Pooled connection used by the application at runtime. On hosted providers
+  // (Neon, Supabase, Vercel Postgres) this points at the connection pooler so
+  // many serverless invocations share a small number of real connections.
+  url      = env("DATABASE_URL")
+  // Direct (non-pooled) connection used only by `prisma migrate` / `db push`,
+  // which need a long-lived session and cannot run through a transaction-mode
+  // pooler. This variable must be set (see .env.example); on providers without
+  // a separate direct endpoint, set it to the same value as DATABASE_URL.
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  passwordHash   String
+  role           String   @default("USER")
+  isActive       Boolean  @default(false)
+  location       String?
+  investmentGoal String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  transactions   Transaction[]
+}
+
+model Transaction {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       String    @default("DEPOSIT")
+  amount     Float
+  status     String    @default("PENDING")
+  note       String?
+  reviewedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([status])
+  @@index([userId])
+}

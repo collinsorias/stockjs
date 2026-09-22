@@ -1,0 +1,5 @@
+- Use the project root as the working directory unless the user specifies another location.
+- Prefer the App Router patterns used by the generated Next.js app.
+- Keep changes small and focused.
+- Validate with `npm run build` after meaningful changes.
+- Use TypeScript and keep imports aligned with the configured `@/*` alias.

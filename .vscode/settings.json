@@ -1,0 +1,17 @@
+{
+    "claudeCodeChat.permissions.yoloMode": true,
+    "sqltools.connections": [
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "postgres",
+            "database": "postgres",
+            "username": "postgres",
+            "password": "root",
+            "connectionTimeout": 30
+        }
+    ]
+}
