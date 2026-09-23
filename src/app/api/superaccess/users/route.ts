@@ -28,6 +28,30 @@ export async function GET() {
   }
 
   try {
+    // Ensure the user table has at least a demo account so the panel
+    // never displays empty when first loaded by an authorized admin.
+    const userCount = await prisma.user.count();
+
+    if (userCount === 0) {
+      const generatedPassword = randomBytes(12).toString("base64url");
+      const passwordHash = await bcrypt.hash(generatedPassword, 10);
+
+      const user = await prisma.$transaction(async (tx) => {
+        return tx.user.create({
+          data: {
+            name: SEED_USER_NAME,
+            email: SEED_USER_EMAIL,
+            passwordHash,
+            role: "USER",
+            isActive: true,
+          },
+          select: USER_SELECT,
+        });
+      });
+
+      return NextResponse.json({ users: [user] });
+    }
+
     const users = await prisma.user.findMany({
       select: USER_SELECT,
       orderBy: { createdAt: "desc" },
@@ -35,7 +59,7 @@ export async function GET() {
 
     return NextResponse.json({ users });
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching users:", err);
     return NextResponse.json(
       { error: "Failed to fetch users" },
       { status: 500 }
