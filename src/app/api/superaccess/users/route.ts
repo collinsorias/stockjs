@@ -1,15 +1,9 @@
-import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
-import bcrypt from "bcryptjs";
 
 import { prisma } from "@/lib/prisma";
 import { verifySuperaccess } from "@/lib/superaccess";
-
-// The account spawned when the user table is completely empty. It ships with
-// no transactions, so its settled balance starts at $0.
-const SEED_USER_NAME = "Demo User";
-const SEED_USER_EMAIL = "demo@example.com";
+import { DEFAULT_TEST_USER, ensureDefaultTestUser } from "@/lib/seed";
 
 const USER_SELECT = {
   id: true,
@@ -28,29 +22,10 @@ export async function GET() {
   }
 
   try {
-    // Ensure the user table has at least a demo account so the panel
-    // never displays empty when first loaded by an authorized admin.
-    const userCount = await prisma.user.count();
-
-    if (userCount === 0) {
-      const generatedPassword = randomBytes(12).toString("base64url");
-      const passwordHash = await bcrypt.hash(generatedPassword, 10);
-
-      const user = await prisma.$transaction(async (tx) => {
-        return tx.user.create({
-          data: {
-            name: SEED_USER_NAME,
-            email: SEED_USER_EMAIL,
-            passwordHash,
-            role: "USER",
-            isActive: true,
-          },
-          select: USER_SELECT,
-        });
-      });
-
-      return NextResponse.json({ users: [user] });
-    }
+    // Seed the default test account as part of the very first fetch, so the
+    // panel never opens empty and no refresh is needed before the account
+    // appears. It is a no-op once the account exists.
+    await ensureDefaultTestUser();
 
     const users = await prisma.user.findMany({
       select: USER_SELECT,
@@ -60,18 +35,24 @@ export async function GET() {
     return NextResponse.json({ users });
   } catch (err) {
     console.error("Error fetching users:", err);
+
+    // This route is only reachable by an authenticated superaccess admin,
+    // so echoing the cause makes deployment problems (missing env vars,
+    // unapplied migrations) visible in the panel instead of a bare 500.
+    const detail = err instanceof Error ? err.message : "Unknown error";
+
     return NextResponse.json(
-      { error: "Failed to fetch users" },
+      { error: "Failed to fetch users", detail },
       { status: 500 }
     );
   }
 }
 
 /**
- * Spawn the demo account, but only while the user table has no rows at all.
- * The count and the insert run in one transaction so two admins refreshing at
- * the same moment cannot both create an account. The new user owns no
- * transactions, so their current balance is $0.
+ * Spawn the default test account. Kept for the panel's explicit seed flow:
+ * the GET handler now seeds automatically, so this only matters when the
+ * account was deleted. Returns 409 when the account already exists, which
+ * tells the client to simply re-read the list.
  */
 export async function POST() {
   const isAuthorized = await verifySuperaccess();
@@ -81,41 +62,31 @@ export async function POST() {
   }
 
   try {
-    // 16 characters, and the only place this value is ever revealed.
-    const generatedPassword = randomBytes(12).toString("base64url");
-    const passwordHash = await bcrypt.hash(generatedPassword, 10);
+    const result = await ensureDefaultTestUser();
 
-    const user = await prisma.$transaction(async (tx) => {
-      const userCount = await tx.user.count();
-
-      if (userCount > 0) {
-        return null;
-      }
-
-      return tx.user.create({
-        data: {
-          name: SEED_USER_NAME,
-          email: SEED_USER_EMAIL,
-          passwordHash,
-          role: "USER",
-          isActive: true,
-        },
-        select: USER_SELECT,
-      });
-    });
-
-    if (!user) {
+    if (!result.created) {
       return NextResponse.json(
         { error: "Users already exist" },
         { status: 409 }
       );
     }
 
-    return NextResponse.json({ user, generatedPassword });
+    const user = await prisma.user.findUnique({
+      where: { email: DEFAULT_TEST_USER.email },
+      select: USER_SELECT,
+    });
+
+    // The password is the documented default, so surface it to the admin
+    // exactly like the old one-shot generated password.
+    return NextResponse.json({
+      user,
+      generatedPassword: DEFAULT_TEST_USER.password,
+    });
   } catch (err) {
     console.error(err);
+    const detail = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json(
-      { error: "Failed to create user" },
+      { error: "Failed to create user", detail },
       { status: 500 }
     );
   }

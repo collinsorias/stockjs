@@ -15,6 +15,23 @@ import {
 
 type PanelTab = "users" | "requests";
 
+/**
+ * Build a human readable error from a failed response. API routes behind the
+ * superaccess auth include a `detail` field describing the server-side cause
+ * (e.g. a missing env var or unapplied migration), so surface it when present
+ * instead of only the status code.
+ */
+async function readErrorMessage(response: Response, fallback: string): Promise<string> {
+  const generic = `${fallback} (${response.status})`;
+
+  try {
+    const data = (await response.json()) as { detail?: string; error?: string };
+    return data.detail ? `${generic}: ${data.detail}` : generic;
+  } catch {
+    return generic;
+  }
+}
+
 export default function SuperaccessPage() {
   const router = useRouter();
   const [users, setUsers] = useState<SuperaccessUser[]>([]);
@@ -40,11 +57,11 @@ export default function SuperaccessPage() {
       ]);
 
       if (!usersResponse.ok) {
-        throw new Error(`Failed to fetch users (${usersResponse.status})`);
+        throw new Error(await readErrorMessage(usersResponse, "Failed to fetch users"));
       }
 
       if (!transactionsResponse.ok) {
-        throw new Error(`Failed to fetch requests (${transactionsResponse.status})`);
+        throw new Error(await readErrorMessage(transactionsResponse, "Failed to fetch requests"));
       }
 
       const usersData = await usersResponse.json();
@@ -121,11 +138,11 @@ export default function SuperaccessPage() {
         ]);
 
         if (!usersResponse.ok) {
-          throw new Error(`Failed to fetch users (${usersResponse.status})`);
+          throw new Error(await readErrorMessage(usersResponse, "Failed to fetch users"));
         }
 
         if (!transactionsResponse.ok) {
-          throw new Error(`Failed to fetch requests (${transactionsResponse.status})`);
+          throw new Error(await readErrorMessage(transactionsResponse, "Failed to fetch requests"));
         }
 
         const usersData = await usersResponse.json();
@@ -331,7 +348,11 @@ export default function SuperaccessPage() {
         {seededPassword ? (
           <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200 sm:flex-row sm:items-center sm:justify-between">
             <span>
-              The user table was empty, so a Demo User account was created with a $0 balance.
+              The default test account was created with a $25,000 opening balance.
+              Sign-in email:{" "}
+              <code className="rounded bg-emerald-500/20 px-1.5 py-0.5 font-mono text-emerald-100">
+                admin123@example.com
+              </code>{" "}
               Sign-in password:{" "}
               <code className="rounded bg-emerald-500/20 px-1.5 py-0.5 font-mono text-emerald-100">
                 {seededPassword}
