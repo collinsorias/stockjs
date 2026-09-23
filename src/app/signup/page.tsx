@@ -2,16 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Clock, LogIn } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { BrandLogo } from "@/components/brand-logo";
 
-const FALLBACK_PENDING_MESSAGE =
-  "Your account has been created and is awaiting administrator approval. You will be able to sign in once it has been activated.";
-
 export default function SignupPage() {
+  const router = useRouter();
   const [error, setError] = useState("");
-  const [pendingMessage, setPendingMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -32,48 +29,23 @@ export default function SignupPage() {
       headers: { "Content-Type": "application/json" },
     });
 
-    const result = await response.json();
+    // A crash or unhandled error in the route can return HTML/empty body, so
+    // never assume every response is JSON.
+    let result: { error?: string; message?: string } = {};
+    try {
+      result = await response.json();
+    } catch {
+      result = {};
+    }
     setLoading(false);
 
     if (!response.ok) {
-      setError(result.error || "Signup failed");
+      setError(result.error || `Signup failed (${response.status}). Please try again.`);
       return;
     }
 
-    setPendingMessage(typeof result.message === "string" ? result.message : FALLBACK_PENDING_MESSAGE);
-  }
-
-  if (pendingMessage) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-12">
-        <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-slate-900 p-8 text-center shadow-2xl shadow-cyan-950/30">
-          <div className="flex justify-center">
-          
-          </div>
-
-          <div className="mt-6 flex justify-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-amber-400/30 bg-amber-500/10 text-amber-300">
-              <Clock className="h-6 w-6" />
-            </div>
-          </div>
-
-          <h1 className="mt-4 text-3xl font-bold text-white">Account created</h1>
-          <p className="mt-3 text-sm leading-6 text-slate-300"></p>
-
-          <p className="mt-4 rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-center text-sm text-slate-400">
-            Awaiting Review.
-          </p>
-
-          <Link
-            href="/login"
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
-          >
-            <LogIn className="h-4 w-4" />
-            Go to login
-          </Link>
-        </div>
-      </main>
-    );
+    router.push("/dashboard");
+    router.refresh();
   }
 
   return (

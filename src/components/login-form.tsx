@@ -31,11 +31,18 @@ export function LoginForm({ notice }: LoginFormProps) {
       headers: { "Content-Type": "application/json" },
     });
 
-    const result = await response.json();
+    // A crash or unhandled error in the route can return HTML/empty body, so
+    // never assume every response is JSON.
+    let result: { error?: string } = {};
+    try {
+      result = await response.json();
+    } catch {
+      result = {};
+    }
     setLoading(false);
 
     if (!response.ok) {
-      setError(result.error || "Login failed");
+      setError(result.error || `Login failed (${response.status}). Please try again.`);
       return;
     }
 

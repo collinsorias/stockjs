@@ -45,21 +45,23 @@ deployed server cannot reach your local machine.
 
 ### 1. Create a hosted database
 
-Pick one provider and copy **both** connection strings it gives you:
+Pick one provider and copy the connection strings it gives you:
 
-| Provider | Pooled URL (use for `DATABASE_URL`) | Direct URL (use for `DIRECT_URL`) |
+| Provider | Runtime URL (use for `DATABASE_URL`) | Migration URL (use for `DIRECT_URL`) |
 | --- | --- | --- |
 | [Neon](https://neon.tech) | host ends in `-pooler` | host without `-pooler` |
-| [Supabase](https://supabase.com) | port `6543` | port `5432` |
+| [Supabase](https://supabase.com) | session pooler on port `5432` | direct endpoint on port `5432`, when reachable |
 | [Vercel Postgres](https://vercel.com/storage/postgres) | host ends in `-pooler` | host without `-pooler` |
 
 `DATABASE_URL` is what the running app uses. `DIRECT_URL` is used only by
 `prisma migrate`, which needs a long-lived session that a transaction-mode
 pooler cannot provide.
 
-> Supabase's pooler runs in transaction mode, so `?pgbouncer=true` is required
-> on the pooled URL: `...:6543/postgres?pgbouncer=true`. Prisma connections
-> through a pooler must not use prepared statements.
+Supabase provides both session (`:5432`) and transaction (`:6543`) poolers.
+Use the session pooler for Prisma. If Supabase's direct endpoint is unreachable
+from your runtime (for example, because it is IPv6-only), use the reachable
+session pooler for `DIRECT_URL` as a safe fallback; do not use the transaction
+pooler for migrations.
 
 ### 2. Set environment variables on your host
 

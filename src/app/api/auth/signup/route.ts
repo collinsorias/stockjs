@@ -1,14 +1,22 @@
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 
+import { createSessionToken, getAuthCookieOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-const PENDING_APPROVAL_MESSAGE =
-  "Your account has been created and is awaiting administrator approval. You will be able to sign in once it has been activated.";
-
 export async function POST(request: Request) {
-  const body = await request.json();
-  const { name, email, password, location, investmentGoal } = body ?? {};
+  let body: unknown;
+
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  }
+
+  const { name, email, password, location, investmentGoal } = (body ?? {}) as Record<
+    string,
+    unknown
+  >;
 
   if (!name || !email || !password) {
     return NextResponse.json({ error: "Name, email, and password are required." }, { status: 400 });
@@ -26,8 +34,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "An account with that email already exists." }, { status: 409 });
   }
 
-  // New sign-ups start disabled. An administrator must activate the account
-  // from the superaccess dashboard before the user can log in.
+  // New sign-ups are active by default so the signup -> login -> dashboard
+  // flow works out of the box. Administrators can still disable an account
+  // afterwards from the superaccess dashboard.
   const user = await prisma.user.create({
     data: {
       name: String(name),
@@ -36,14 +45,25 @@ export async function POST(request: Request) {
       location: location ? String(location) : null,
       investmentGoal: investmentGoal ? String(investmentGoal) : null,
       role: "USER",
-      isActive: false,
+      isActive: true,
     },
   });
 
-  return NextResponse.json({
+  // Sign the new user in immediately so signup -> dashboard is one step.
+  const token = await createSessionToken({
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role === "ADMIN" ? "ADMIN" : "USER",
+  });
+
+  const response = NextResponse.json({
     ok: true,
-    pendingApproval: true,
-    message: PENDING_APPROVAL_MESSAGE,
+    pendingApproval: false,
+    message: "Your account is ready.",
     user: { id: user.id, email: user.email, isActive: user.isActive },
   });
+  response.cookies.set("stockjs_session", token, getAuthCookieOptions());
+
+  return response;
 }

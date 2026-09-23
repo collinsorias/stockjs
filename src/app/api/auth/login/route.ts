@@ -35,7 +35,7 @@ export async function POST(request: Request) {
 
   if (!user.isActive) {
     return NextResponse.json(
-      { error: "ERROR_404" },
+      { error: "Your account has been disabled. Contact an administrator." },
       { status: 403 },
     );
   }
