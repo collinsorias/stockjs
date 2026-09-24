@@ -45,7 +45,7 @@ export async function POST(request: Request) {
       location: location ? String(location) : null,
       investmentGoal: investmentGoal ? String(investmentGoal) : null,
       role: "USER",
-      isActive: true,
+      isActive: false,
     },
   });
 

@@ -102,14 +102,14 @@ export default async function AdminPage() {
   const users: AdminUserSummary[] = await getUsers();
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <header className="mb-8 flex flex-col gap-4 rounded-3xl border border-white/10 bg-slate-900/80 p-6 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-cyan-300">Admin controls</p>
-            <h1 className="mt-2 text-3xl font-bold">User management</h1>
+    <main className="min-h-screen w-full max-w-full overflow-x-clip bg-slate-950 px-3 py-4 text-slate-100 sm:px-6 sm:py-8 lg:px-8">
+      <div className="mx-auto w-full min-w-0 max-w-7xl">
+        <header className="mb-6 flex flex-col gap-4 rounded-3xl border border-white/10 bg-slate-900/80 p-4 sm:mb-8 sm:p-6 md:flex-row md:items-center md:justify-between">
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-[0.2em] text-cyan-300 sm:text-sm">Admin controls</p>
+            <h1 className="mt-2 text-2xl font-bold sm:text-3xl">User management</h1>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             <a href="/dashboard" className="rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-white/5">
               Dashboard
             </a>
@@ -119,37 +119,89 @@ export default async function AdminPage() {
           </div>
         </header>
 
-        <section className="mb-6 rounded-3xl border border-white/10 bg-slate-900 p-6">
+        <section className="mb-6 min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-slate-900 p-4 sm:p-6">
           <div className="text-sm text-slate-400">Signed in as</div>
-          <div className="mt-2 text-xl font-bold text-white">{admin.name}</div>
-          <div className="text-sm text-slate-300">{admin.email}</div>
+          <div className="mt-2 break-words text-lg font-bold text-white sm:text-xl">{admin.name}</div>
+          <div className="break-all text-sm text-slate-300">{admin.email}</div>
         </section>
 
-        <section className="overflow-hidden rounded-3xl border border-white/10 bg-slate-900">
+        {/* Mobile cards — no horizontal scroll on phones */}
+        <section className="space-y-3 md:hidden">
+          {users.map((user: AdminUserSummary) => (
+            <article key={user.id} className="min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-slate-900 p-4">
+              <div className="flex min-w-0 items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate font-medium text-white">{user.name}</div>
+                  <div className="mt-0.5 break-all text-xs text-slate-400">{user.email}</div>
+                </div>
+                <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${user.isActive ? "bg-emerald-500/15 text-emerald-300" : "bg-rose-500/15 text-rose-300"}`}>
+                  {user.isActive ? "Active" : "Disabled"}
+                </span>
+              </div>
+
+              <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-400">
+                <span className="rounded-full bg-white/5 px-2 py-1">{user.role}</span>
+                <span className="rounded-full bg-white/5 px-2 py-1">{user.location ?? "No location"}</span>
+                <span className="rounded-full bg-white/5 px-2 py-1">{user.investmentGoal ?? "No goal"}</span>
+              </div>
+
+              <form action={changeUserRole} className="mt-3 flex min-w-0 gap-2">
+                <input type="hidden" name="userId" value={user.id} />
+                <select name="role" defaultValue={user.role} className="min-w-0 flex-1 rounded-xl border border-white/10 bg-slate-950 px-2 py-2.5 text-base text-white outline-none">
+                  <option value="USER">USER</option>
+                  <option value="ADMIN">ADMIN</option>
+                </select>
+                <button type="submit" className="shrink-0 rounded-xl bg-white/5 px-3 py-2 text-xs font-semibold text-slate-100 hover:bg-white/10">
+                  Update role
+                </button>
+              </form>
+
+              <form action={updateUserProfile} className="mt-3 space-y-2">
+                <input type="hidden" name="userId" value={user.id} />
+                <input name="name" defaultValue={user.name} aria-label="Name" className="w-full min-w-0 rounded-xl border border-white/10 bg-slate-950 px-3 py-2.5 text-base text-white outline-none" />
+                <input name="email" defaultValue={user.email} aria-label="Email" className="w-full min-w-0 rounded-xl border border-white/10 bg-slate-950 px-3 py-2.5 text-base text-white outline-none" />
+                <input name="location" defaultValue={user.location ?? ""} placeholder="Location" className="w-full min-w-0 rounded-xl border border-white/10 bg-slate-950 px-3 py-2.5 text-base text-white outline-none placeholder:text-slate-500" />
+                <input name="investmentGoal" defaultValue={user.investmentGoal ?? ""} placeholder="Investment goal" className="w-full min-w-0 rounded-xl border border-white/10 bg-slate-950 px-3 py-2.5 text-base text-white outline-none placeholder:text-slate-500" />
+                <button type="submit" className="w-full rounded-xl bg-cyan-500 px-3 py-2.5 text-sm font-semibold text-slate-950 hover:bg-cyan-400">
+                  Save profile
+                </button>
+              </form>
+
+              <form action={toggleUser} className="mt-2">
+                <input type="hidden" name="userId" value={user.id} />
+                <button type="submit" className={`w-full rounded-xl px-3 py-2.5 text-sm font-semibold ${user.isActive ? "bg-rose-500/20 text-rose-200 hover:bg-rose-500/30" : "bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30"}`}>
+                  {user.isActive ? "Disable" : "Enable"}
+                </button>
+              </form>
+            </article>
+          ))}
+        </section>
+
+        <section className="hidden overflow-hidden rounded-3xl border border-white/10 bg-slate-900 md:block">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-white/10 text-left">
+            <table className="w-full min-w-[900px] divide-y divide-white/10 text-left">
               <thead className="bg-slate-950 text-xs uppercase tracking-[0.2em] text-slate-400">
                 <tr>
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">Email</th>
-                  <th className="px-4 py-3">Role</th>
-                  <th className="px-4 py-3">Location</th>
-                  <th className="px-4 py-3">Goal</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Action</th>
+                  <th className="whitespace-nowrap px-4 py-3">Name</th>
+                  <th className="whitespace-nowrap px-4 py-3">Email</th>
+                  <th className="whitespace-nowrap px-4 py-3">Role</th>
+                  <th className="whitespace-nowrap px-4 py-3">Location</th>
+                  <th className="whitespace-nowrap px-4 py-3">Goal</th>
+                  <th className="whitespace-nowrap px-4 py-3">Status</th>
+                  <th className="whitespace-nowrap px-4 py-3">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/10 text-sm text-slate-200">
                 {users.map((user: AdminUserSummary) => (
                   <tr key={user.id} className="bg-slate-900/70 align-top">
-                    <td className="px-4 py-4 font-medium text-white">
-                      <div className="text-white">{user.name}</div>
+                    <td className="max-w-[160px] truncate px-4 py-4 font-medium text-white">
+                      <div className="truncate text-white">{user.name}</div>
                     </td>
-                    <td className="px-4 py-4">{user.email}</td>
-                    <td className="px-4 py-4">
+                    <td className="max-w-[200px] truncate px-4 py-4">{user.email}</td>
+                    <td className="min-w-[140px] px-4 py-4">
                       <form action={changeUserRole} className="space-y-2">
                         <input type="hidden" name="userId" value={user.id} />
-                        <select name="role" defaultValue={user.role} className="w-full rounded-xl border border-white/10 bg-slate-950 px-2 py-2 text-sm text-white outline-none">
+                        <select name="role" defaultValue={user.role} className="w-full min-w-0 rounded-xl border border-white/10 bg-slate-950 px-2 py-2 text-sm text-white outline-none">
                           <option value="USER">USER</option>
                           <option value="ADMIN">ADMIN</option>
                         </select>
@@ -158,19 +210,19 @@ export default async function AdminPage() {
                         </button>
                       </form>
                     </td>
-                    <td className="px-4 py-4">{user.location ?? "—"}</td>
-                    <td className="px-4 py-4">{user.investmentGoal ?? "—"}</td>
-                    <td className="px-4 py-4">
+                    <td className="max-w-[140px] truncate px-4 py-4">{user.location ?? "—"}</td>
+                    <td className="max-w-[160px] truncate px-4 py-4">{user.investmentGoal ?? "—"}</td>
+                    <td className="whitespace-nowrap px-4 py-4">
                       <span className={user.isActive ? "text-emerald-300" : "text-rose-300"}>{user.isActive ? "Active" : "Disabled"}</span>
                     </td>
-                    <td className="px-4 py-4">
+                    <td className="min-w-[220px] px-4 py-4">
                       <div className="space-y-3">
                         <form action={updateUserProfile} className="space-y-2">
                           <input type="hidden" name="userId" value={user.id} />
-                          <input name="name" defaultValue={user.name} className="w-full rounded-xl border border-white/10 bg-slate-950 px-2 py-2 text-sm text-white outline-none" />
-                          <input name="email" defaultValue={user.email} className="w-full rounded-xl border border-white/10 bg-slate-950 px-2 py-2 text-sm text-white outline-none" />
-                          <input name="location" defaultValue={user.location ?? ""} placeholder="Location" className="w-full rounded-xl border border-white/10 bg-slate-950 px-2 py-2 text-sm text-white outline-none placeholder:text-slate-500" />
-                          <input name="investmentGoal" defaultValue={user.investmentGoal ?? ""} placeholder="Investment goal" className="w-full rounded-xl border border-white/10 bg-slate-950 px-2 py-2 text-sm text-white outline-none placeholder:text-slate-500" />
+                          <input name="name" defaultValue={user.name} className="w-full min-w-0 rounded-xl border border-white/10 bg-slate-950 px-2 py-2 text-sm text-white outline-none" />
+                          <input name="email" defaultValue={user.email} className="w-full min-w-0 rounded-xl border border-white/10 bg-slate-950 px-2 py-2 text-sm text-white outline-none" />
+                          <input name="location" defaultValue={user.location ?? ""} placeholder="Location" className="w-full min-w-0 rounded-xl border border-white/10 bg-slate-950 px-2 py-2 text-sm text-white outline-none placeholder:text-slate-500" />
+                          <input name="investmentGoal" defaultValue={user.investmentGoal ?? ""} placeholder="Investment goal" className="w-full min-w-0 rounded-xl border border-white/10 bg-slate-950 px-2 py-2 text-sm text-white outline-none placeholder:text-slate-500" />
                           <button type="submit" className="w-full rounded-lg bg-cyan-500 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-cyan-400">
                             Save profile
                           </button>

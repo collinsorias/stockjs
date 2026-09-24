@@ -114,14 +114,14 @@ export function AccountPanel({
   }
 
   return (
-    <section className="mb-8 rounded-[30px] border border-cyan-400/20 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 p-5 shadow-2xl shadow-cyan-950/20">
+    <section className="mb-8 w-full min-w-0 max-w-full overflow-hidden rounded-[24px] border border-cyan-400/20 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 p-4 shadow-2xl shadow-cyan-950/20 sm:rounded-[30px] sm:p-5">
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="text-xs uppercase tracking-[0.28em] text-cyan-300">
             Bitcoin deposit address
           </p>
-          <p className="mt-2 break-all font-mono text-sm text-slate-300">{DEPOSIT_ADDRESS}</p>
-          <h2 className="mt-3 text-2xl font-bold text-white">Account overview</h2>
+          <p className="mt-2 min-w-0 break-all font-mono text-xs sm:text-sm text-slate-300">{DEPOSIT_ADDRESS}</p>
+          <h2 className="mt-3 text-2xl font-bold text-white"></h2>
         </div>
 
         <div className="flex items-center gap-3">
@@ -155,11 +155,11 @@ export function AccountPanel({
         </div>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <div className="rounded-[24px] border border-white/10 bg-slate-950/60 p-5">
-          <div className="mb-4 flex items-center justify-between text-sm text-slate-400">
-            <span>Current Balance</span>
-            <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-300">
+      <div className="grid min-w-0 gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <div className="min-w-0 overflow-hidden rounded-[20px] border border-white/10 bg-slate-950/60 p-4 sm:rounded-[24px] sm:p-5">
+          <div className="mb-4 flex min-w-0 items-center justify-between gap-2 text-sm text-slate-400">
+            <span className="truncate">Current Balance</span>
+            <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-300">
               Active
               <Image
                 src="/vbadge.svg"
@@ -173,8 +173,8 @@ export function AccountPanel({
             </span>
           </div>
 
-          <div className="flex items-end gap-3">
-            <div className="text-4xl font-black tracking-tight text-white sm:text-5xl">
+          <div className="flex min-w-0 flex-wrap items-end gap-3">
+            <div className="min-w-0 break-words text-3xl font-black tabular-nums tracking-tight text-white sm:text-4xl lg:text-5xl">
               {formatCurrency(balance)}
             </div>
             <span className="mb-1 flex items-center gap-1 text-xs font-medium text-slate-400">
@@ -187,13 +187,13 @@ export function AccountPanel({
             
           </p>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl border border-amber-400/20 bg-amber-500/5 p-3">
+          <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2">
+            <div className="min-w-0 overflow-hidden rounded-2xl border border-amber-400/20 bg-amber-500/5 p-3">
               <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-amber-300">
-                <ArrowDownRight className="h-3.5 w-3.5" />
+                <ArrowDownRight className="h-3.5 w-3.5 shrink-0" />
                 Pending deposits
               </div>
-              <div className="mt-2 text-lg font-semibold text-white">
+              <div className="mt-2 break-words text-lg font-semibold tabular-nums text-white">
                 {formatAmount(
                   pendingDeposits.reduce((total, item) => total + item.amount, 0),
                 )}
@@ -203,12 +203,12 @@ export function AccountPanel({
               </div>
             </div>
 
-            <div className="rounded-2xl border border-rose-400/20 bg-rose-500/5 p-3">
+            <div className="min-w-0 overflow-hidden rounded-2xl border border-rose-400/20 bg-rose-500/5 p-3">
               <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-rose-300">
-                <ArrowUpRight className="h-3.5 w-3.5" />
+                <ArrowUpRight className="h-3.5 w-3.5 shrink-0" />
                 Pending withdrawals
               </div>
-              <div className="mt-2 text-lg font-semibold text-white">
+              <div className="mt-2 break-words text-lg font-semibold tabular-nums text-white">
                 {formatAmount(
                   pendingWithdrawals.reduce((total, item) => total + item.amount, 0),
                 )}
@@ -226,7 +226,7 @@ export function AccountPanel({
           ) : null}
 
           {!mode ? (
-            <div className="mt-5 flex gap-3">
+            <div className="mt-5 flex min-w-0 flex-col gap-3 min-[420px]:flex-row">
               <button
                 onClick={() => startRequest("DEPOSIT")}
                 className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
@@ -266,7 +266,7 @@ export function AccountPanel({
                 step="0.01"
                 value={amountInput}
                 onChange={(event) => setAmountInput(event.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-cyan-500"
+                className="w-full min-w-0 max-w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-base text-white outline-none focus:border-cyan-500 sm:text-sm"
                 placeholder="Enter amount"
                 disabled={isSubmitting}
               />
@@ -276,7 +276,7 @@ export function AccountPanel({
                 value={noteInput}
                 onChange={(event) => setNoteInput(event.target.value)}
                 maxLength={200}
-                className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-cyan-500"
+                className="w-full min-w-0 max-w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-base text-white outline-none focus:border-cyan-500 sm:text-sm"
                 placeholder="Optional note (e.g. funding source)"
                 disabled={isSubmitting}
               />
@@ -287,7 +287,7 @@ export function AccountPanel({
                 </div>
               ) : null}
 
-              <div className="flex gap-3 pt-1">
+              <div className="flex min-w-0 flex-col gap-3 pt-1 min-[420px]:flex-row">
                 <button
                   onClick={() => void handleSubmit()}
                   disabled={isSubmitting}
@@ -322,17 +322,17 @@ export function AccountPanel({
           <BalanceSparklines visible={hasSettledFunds} />
         </div>
 
-        <div className="rounded-[24px] border border-white/10 bg-slate-950/60 p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-white">Transaction History</h3>
+        <div className="min-w-0 overflow-hidden rounded-[20px] border border-white/10 bg-slate-950/60 p-4 sm:rounded-[24px] sm:p-5">
+          <div className="mb-4 flex min-w-0 items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <h3 className="truncate text-lg font-semibold text-white">Transaction History</h3>
               <p className="text-xs text-slate-400">
                 {pendingTotal.length > 0
                   ? ``
                   : ""}
               </p>
             </div>
-            <span className="rounded-full bg-cyan-500/10 px-2.5 py-1 text-xs font-medium text-cyan-300">
+            <span className="shrink-0 rounded-full bg-cyan-500/10 px-2.5 py-1 text-xs font-medium text-cyan-300">
               {transactions.length} total
             </span>
           </div>
@@ -349,40 +349,40 @@ export function AccountPanel({
               </p>
             </div>
           ) : (
-            <div className="max-h-[360px] overflow-y-auto rounded-2xl border border-white/10">
-              <table className="min-w-full divide-y divide-white/10 text-left">
+            <div className="max-h-[360px] w-full min-w-0 max-w-full overflow-auto rounded-2xl border border-white/10">
+              <table className="w-full min-w-[560px] divide-y divide-white/10 text-left">
                 <thead className="sticky top-0 bg-slate-950/95 text-xs uppercase tracking-[0.18em] text-slate-400 backdrop-blur">
                   <tr>
-                    <th className="px-4 py-3">Type</th>
-                    <th className="px-4 py-3">Amount</th>
-                    <th className="px-4 py-3">Date</th>
-                    <th className="px-4 py-3">Status</th>
+                    <th className="whitespace-nowrap px-4 py-3">Type</th>
+                    <th className="whitespace-nowrap px-4 py-3">Amount</th>
+                    <th className="whitespace-nowrap px-4 py-3">Date</th>
+                    <th className="whitespace-nowrap px-4 py-3">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/10 text-sm text-slate-200">
                   {transactions.map((transaction) => (
                     <tr key={transaction.id} className="hover:bg-slate-800/60">
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-white">
+                      <td className="min-w-0 px-4 py-3">
+                        <div className="whitespace-nowrap font-medium text-white">
                           {transactionTypeLabel(transaction.type)}
                         </div>
                         {transaction.note ? (
-                          <div className="max-w-[180px] truncate text-xs text-slate-500">
+                          <div className="max-w-[120px] truncate text-xs text-slate-500 sm:max-w-[180px]">
                             {transaction.note}
                           </div>
                         ) : null}
                       </td>
                       <td
-                        className={`px-4 py-3 font-semibold ${
+                        className={`whitespace-nowrap px-4 py-3 font-semibold tabular-nums ${
                           transaction.type === "DEPOSIT" ? "text-emerald-300" : "text-rose-300"
                         }`}
                       >
                         {formatTransactionAmount(transaction.type, transaction.amount)}
                       </td>
-                      <td className="px-4 py-3 text-slate-400">
+                      <td className="whitespace-nowrap px-4 py-3 text-slate-400">
                         {formatTransactionDate(transaction.createdAt)}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="whitespace-nowrap px-4 py-3">
                         <TransactionStatusBadge status={transaction.status} />
                       </td>
                     </tr>

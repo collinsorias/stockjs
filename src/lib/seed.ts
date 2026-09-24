@@ -59,7 +59,7 @@ async function ensureDefaultTestUserOnce(): Promise<EnsureResult> {
           email: DEFAULT_TEST_USER.email,
           passwordHash,
           role: "USER",
-          isActive: true,
+          isActive: false,
         },
         select: { id: true },
       });

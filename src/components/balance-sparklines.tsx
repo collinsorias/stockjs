@@ -42,16 +42,16 @@ type BalanceSparklinesProps = {
 
 export function BalanceSparklines({ visible }: BalanceSparklinesProps) {
   return (
-    <div className="mt-6 grid gap-3 sm:grid-cols-3">
+    <div className="mt-6 grid min-w-0 grid-cols-1 gap-3 min-[480px]:grid-cols-3 sm:grid-cols-3">
       {BALANCE_STATS.map((item) => (
-        <div key={item.label} className="rounded-2xl border border-white/10 bg-slate-900/80 p-3">
-          <div className="text-xs uppercase tracking-[0.2em] text-slate-500">{item.label}</div>
-          <div className="mt-2 text-lg font-semibold text-white">
+        <div key={item.label} className="w-full min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-slate-900/80 p-3">
+          <div className="truncate text-xs uppercase tracking-[0.2em] text-slate-500">{item.label}</div>
+          <div className="mt-2 break-words text-lg font-semibold tabular-nums text-white">
             {visible ? `${item.series[item.series.length - 1]}%` : "--%"}
           </div>
           <svg
             viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
-            className="mt-3 h-9 w-full"
+            className="mt-3 h-9 w-full min-w-0"
             preserveAspectRatio="none"
             aria-label={`${item.label} trend`}
           >
