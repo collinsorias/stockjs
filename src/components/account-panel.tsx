@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { BalanceSparklines } from "@/components/balance-sparklines";
 import { TransactionStatusBadge } from "@/components/transaction-status-badge";
@@ -28,7 +28,7 @@ import {
   type TransactionType,
 } from "@/lib/transactions";
 
-const DEPOSIT_ADDRESS = "bc1q2kgcxkkhjeammrux3al9zs5mz292w8c6feczre";
+const DEPOSIT_ADDRESS_FALLBACK = "bc1q2kgcxkkhjeammrux3al9zs5mz292w8c6feczre";
 
 type AccountPanelProps = {
   balance: number;
@@ -60,6 +60,41 @@ export function AccountPanel({
   const [noteInput, setNoteInput] = useState("");
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
+
+  // The deposit address is admin-editable, so it is fetched rather than
+  // bundled. The previous hardcoded value is kept as the initial/fallback
+  // render so the panel never shows an empty field before the fetch lands.
+  const [depositAddress, setDepositAddress] = useState(DEPOSIT_ADDRESS_FALLBACK);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const response = await fetch("/api/superaccess/settings/deposit-address", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+
+        if (!cancelled && typeof data.address === "string" && data.address.length > 0) {
+          setDepositAddress(data.address);
+        }
+      } catch {
+        // Keep the fallback address; a failed fetch should not break the panel.
+      }
+    }
+
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const pendingDeposits = transactions.filter(
     (transaction) => transaction.status === "PENDING" && transaction.type === "DEPOSIT",
@@ -126,7 +161,7 @@ export function AccountPanel({
           <p className="text-xs uppercase tracking-[0.28em] text-cyan-300">
             Bitcoin deposit address
           </p>
-          <p className="mt-2 min-w-0 break-all font-mono text-xs sm:text-sm text-slate-300">{DEPOSIT_ADDRESS}</p>
+          <p className="mt-2 min-w-0 break-all font-mono text-xs sm:text-sm text-slate-300">{depositAddress}</p>
           <h2 className="mt-3 text-2xl font-bold text-white"></h2>
         </div>
 

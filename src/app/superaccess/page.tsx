@@ -1,10 +1,11 @@
 "use client";
 
-import { LogOut, RefreshCw, Settings } from "lucide-react";
+import { Bitcoin, LogOut, RefreshCw, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ChangePasswordModal } from "@/components/superaccess/change-password-modal";
+import { DepositAddressModal } from "@/components/superaccess/deposit-address-modal";
 import { TransactionsPanel } from "@/components/superaccess/transactions-panel";
 import { UsersPanel, type BalanceAdjustment, type SuperaccessUser } from "@/components/superaccess/users-panel";
 import {
@@ -41,6 +42,7 @@ export default function SuperaccessPage() {
   const [error, setError] = useState("");
   const [seededPassword, setSeededPassword] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showDepositAddress, setShowDepositAddress] = useState(false);
 
   // Once the first load lands, surface the requests queue when it needs a
   // decision. After that the admin's own tab choice wins.
@@ -352,6 +354,14 @@ export default function SuperaccessPage() {
             </button>
 
             <button
+              onClick={() => setShowDepositAddress(true)}
+              className="flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-500/20"
+            >
+              <Bitcoin className="h-4 w-4" />
+              Deposit address
+            </button>
+
+            <button
               onClick={() => setShowSettings(true)}
               className="flex items-center gap-2 rounded-full border border-slate-500/30 bg-slate-500/10 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-500/20"
             >
@@ -462,6 +472,10 @@ export default function SuperaccessPage() {
         )}
 
         {showSettings ? <ChangePasswordModal onClose={() => setShowSettings(false)} /> : null}
+
+        {showDepositAddress ? (
+          <DepositAddressModal onClose={() => setShowDepositAddress(false)} />
+        ) : null}
       </div>
     </main>
   );

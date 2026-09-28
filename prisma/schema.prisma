@@ -44,3 +44,13 @@ model Transaction {
   @@index([status])
   @@index([userId])
 }
+
+/// Site-wide key/value settings editable from the superaccess panel, e.g. the
+/// Bitcoin deposit address shown on the user dashboard. Kept as a generic
+/// table so new settings do not each need a schema change. There is no
+/// per-row ownership: reads are public, writes are admin-only at the route.
+model AppSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
