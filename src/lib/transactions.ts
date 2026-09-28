@@ -31,6 +31,12 @@ export type SuperaccessTransaction = TransactionRecord & {
 export const MIN_TRANSACTION_AMOUNT = 1;
 export const MAX_TRANSACTION_AMOUNT = 10_000_000;
 
+/**
+ * Smallest withdrawal a user may request. Enforced both in the account panel
+ * (early feedback) and in POST /api/transactions (the authoritative check).
+ */
+export const MIN_WITHDRAWAL_AMOUNT = 150;
+
 const amountFormatter = new Intl.NumberFormat("en-US", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
@@ -59,6 +65,11 @@ export function formatTransactionAmount(type: TransactionType, amount: number): 
 /** Format a bare amount without a sign, e.g. "$1,250.00". */
 export function formatAmount(amount: number): string {
   return `$${amountFormatter.format(Math.abs(amount))}`;
+}
+
+/** Format a signed amount, e.g. "+$150.00" or "-$40.00". */
+export function formatSignedAmount(amount: number): string {
+  return `${amount < 0 ? "-" : "+"}$${amountFormatter.format(Math.abs(amount))}`;
 }
 
 export function formatTransactionDate(value: string): string {
@@ -161,6 +172,32 @@ export function sumPending(transactions: TransactionRecord[]): {
     { deposit: 0, withdrawal: 0, count: 0 },
   );
 }
+/**
+ * Balance for many users at once, keyed by user id. Used by the superaccess
+ * panel, which lists every account and needs each one's settled balance.
+ *
+ * Only the settled fields are required and they are typed loosely, because the
+ * transaction columns are plain strings in the schema and arrive from Prisma
+ * un-narrowed. Rows that are not APPROVED are ignored.
+ */
+export function computeBalancesByUser(
+  transactions: { userId: string; type: string; amount: number; status: string }[],
+): Map<string, number> {
+  const balances = new Map<string, number>();
+
+  for (const transaction of transactions) {
+    if (transaction.status !== "APPROVED") {
+      continue;
+    }
+
+    const delta = transaction.type === "DEPOSIT" ? transaction.amount : -transaction.amount;
+
+    balances.set(transaction.userId, (balances.get(transaction.userId) ?? 0) + delta);
+  }
+
+  return balances;
+}
+
 export type TransactionSummary = {
   total: number;
   pending: number;

@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ChangePasswordModal } from "@/components/superaccess/change-password-modal";
 import { TransactionsPanel } from "@/components/superaccess/transactions-panel";
-import { UsersPanel, type SuperaccessUser } from "@/components/superaccess/users-panel";
+import { UsersPanel, type BalanceAdjustment, type SuperaccessUser } from "@/components/superaccess/users-panel";
 import {
   summarizeTransactions,
   type SuperaccessTransaction,
@@ -251,6 +251,42 @@ export default function SuperaccessPage() {
     [],
   );
 
+  const handleAdjustUserBalance = useCallback(
+    async (
+      userId: string,
+      adjustment: BalanceAdjustment,
+    ): Promise<{ ok: true } | { ok: false; error: string }> => {
+      try {
+        const response = await fetch("/api/superaccess/users/adjust-balance", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, ...adjustment }),
+        });
+
+        const data = await response.json().catch(() => null);
+
+        if (!response.ok) {
+          return { ok: false, error: data?.error ?? "Failed to adjust balance" };
+        }
+
+        const balance = data?.balance;
+
+        if (typeof balance !== "number") {
+          return { ok: false, error: "Unexpected response from the server" };
+        }
+
+        setUsers((current) =>
+          current.map((user) => (user.id === userId ? { ...user, balance } : user)),
+        );
+
+        return { ok: true };
+      } catch {
+        return { ok: false, error: "Network error. Please try again." };
+      }
+    },
+    [],
+  );
+
   const handleDeleteUser = useCallback(async (userId: string): Promise<boolean> => {
     const confirmed = window.confirm(
       "Delete this user? Their transaction history will be removed too. This cannot be undone.",
@@ -421,6 +457,7 @@ export default function SuperaccessPage() {
             isLoading={isLoading}
             onToggleActive={handleToggleUserActive}
             onDelete={handleDeleteUser}
+            onAdjustBalance={handleAdjustUserBalance}
           />
         )}
 

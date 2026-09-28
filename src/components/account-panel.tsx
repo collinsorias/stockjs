@@ -22,6 +22,7 @@ import {
   formatAmount,
   formatTransactionAmount,
   formatTransactionDate,
+  MIN_WITHDRAWAL_AMOUNT,
   transactionTypeLabel,
   type TransactionRecord,
   type TransactionType,
@@ -93,6 +94,11 @@ export function AccountPanel({
 
     if (!Number.isFinite(amount) || amount <= 0) {
       setFormError("Enter an amount greater than zero.");
+      return;
+    }
+
+    if (mode === "WITHDRAWAL" && amount < MIN_WITHDRAWAL_AMOUNT) {
+      setFormError(`Minimum withdrawal amount is ${formatAmount(MIN_WITHDRAWAL_AMOUNT)}.`);
       return;
     }
 
@@ -270,6 +276,12 @@ export function AccountPanel({
                 placeholder="Enter amount"
                 disabled={isSubmitting}
               />
+
+              {mode === "WITHDRAWAL" ? (
+                <p className="text-xs text-slate-400">
+                  Minimum withdrawal: {formatAmount(MIN_WITHDRAWAL_AMOUNT)}
+                </p>
+              ) : null}
 
               <input
                 type="text"

@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { verifySuperaccess } from "@/lib/superaccess";
 import { DEFAULT_TEST_USER, ensureDefaultTestUser } from "@/lib/seed";
+import { computeBalancesByUser } from "@/lib/transactions";
 
 const USER_SELECT = {
   id: true,
@@ -32,7 +33,18 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json({ users });
+    // Balance lives on the transaction ledger, not on User, so derive it in
+    // one pass over the settled rows for every account in the list.
+    const settledTransactions = await prisma.transaction.findMany({
+      where: { status: "APPROVED" },
+      select: { userId: true, type: true, amount: true, status: true },
+    });
+
+    const balances = computeBalancesByUser(settledTransactions);
+
+    return NextResponse.json({
+      users: users.map((user) => ({ ...user, balance: balances.get(user.id) ?? 0 })),
+    });
   } catch (err) {
     console.error("Error fetching users:", err);
 

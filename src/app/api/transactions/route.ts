@@ -4,6 +4,7 @@ import { getActiveSessionUser } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import {
   isTransactionType,
+  MIN_WITHDRAWAL_AMOUNT,
   parseTransactionAmount,
   type TransactionRecord,
   type TransactionStatus,
@@ -98,6 +99,15 @@ export async function POST(request: Request) {
     if (parsedAmount === null) {
       return NextResponse.json(
         { error: "Enter an amount greater than zero" },
+        { status: 400 },
+      );
+    }
+
+    // Withdrawals carry a floor: this is the authoritative check, the account
+    // panel only mirrors it for faster feedback.
+    if (type === "WITHDRAWAL" && parsedAmount < MIN_WITHDRAWAL_AMOUNT) {
+      return NextResponse.json(
+        { error: `Minimum withdrawal amount is $${MIN_WITHDRAWAL_AMOUNT}` },
         { status: 400 },
       );
     }
