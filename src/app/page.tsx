@@ -61,10 +61,10 @@ export default function Home() {
             <div className="mb-5 flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">Portfolio value</p>
-                <h2 className="mt-1 text-3xl font-bold">$13,864,790</h2>
+                <h2 className="mt-1 text-3xl font-bold">$13,864,790.31</h2>
               </div>
               <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-sm font-semibold text-emerald-300">
-                +$6,420</div>
+                +99.7%</div>
             </div>
 
             <div className="space-y-4">

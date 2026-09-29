@@ -17,6 +17,6 @@ export const watchlist = [
 export const portfolioCards = [
   { title: "ROI", value: "$184,260.00", change: "+$6,420" },
   { title: "Day gain", value: "$2,418.40", change: "+1.32%" },
-  { title: "Liquidity", value: "$42,500.00", change: "+$1,100" },
+  { title: "Liquid", value: "$42,500.00", change: "+$1,100" },
   { title: "Dividend yield", value: "2.47%", change: "+0.19%" },
 ];

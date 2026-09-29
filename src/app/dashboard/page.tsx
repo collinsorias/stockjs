@@ -45,6 +45,9 @@ export default function DashboardPage() {
   );
   const [showAccountPanel, setShowAccountPanel] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  // Purely cosmetic: lets the Alerts bell fill in when clicked. It triggers no
+  // alerts, notifications, or requests.
+  const [alertsActive, setAlertsActive] = useState(false);
 
   const {
     transactions,
@@ -76,8 +79,20 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <button className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300 hover:bg-white/10">
-              <Bell className="h-4 w-4" />
+            <button
+              onClick={() => setAlertsActive((value) => !value)}
+              aria-pressed={alertsActive}
+              className={`flex items-center gap-2 rounded-full border px-3 py-2 text-sm transition-colors ${
+                alertsActive
+                  ? "border-amber-400/40 bg-amber-400/10 text-amber-300"
+                  : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+              }`}
+            >
+              <Bell
+                className={`h-4 w-4 transition-colors ${
+                  alertsActive ? "animate-pulse fill-amber-300 text-amber-300" : ""
+                }`}
+              />
               Alerts
             </button>
             <button
@@ -266,7 +281,7 @@ export default function DashboardPage() {
 
             <div className="space-y-3 sm:space-y-4">
               {([
-                { label: "Cash available", value: "$42,500", icon: Wallet },
+                { label: "Liquid", value: "$42,500", icon: Wallet },
                 { label: "Buying power", value: "$61,200", icon: CreditCard },
                 { label: "Dividend income", value: "$1,280", icon: DollarSign },
                 { label: "Exposure", value: "72%", icon: Briefcase },
